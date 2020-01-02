@@ -18,13 +18,11 @@ def find_music_in_post(list_for_music, post):
 def get_list_of_music_from_walls_in_page(vk, to_id):
     all_music = []
     ofs = 0
-    while ():
+    while True:
         posts = vk.wall.get(owner_id=to_id, count=100, offset=ofs)
         k = 1
-
         for i in posts["items"]:
             k += 1
-            print(k + ofs)
             find_music_in_post(all_music, i)
         ofs += 100
         if ofs >= posts["count"]:
