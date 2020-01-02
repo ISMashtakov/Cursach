@@ -1,7 +1,3 @@
-# my ignor
-.idea
-..idea
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -132,5 +128,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 *.xml
-*.xml
-.idea/modules.xml
+.idea/
+venv/
