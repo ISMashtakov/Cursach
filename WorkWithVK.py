@@ -1,8 +1,9 @@
 import requests
-import urllib
 import lxml.html
+import os
 
 import vk_api
+from PIL import Image, ImageTk
 
 
 def create_vk(login, password):
@@ -11,6 +12,7 @@ def create_vk(login, password):
 
     vk = vk_session.get_api()
     return vk
+
 
 def create_session(login, password):
     url = 'https://vk.com/'
@@ -32,6 +34,11 @@ def create_session(login, password):
         return session
     session.close()
     return False
+
+
+def get_all_friends(vk):
+    friends = vk.friends.get(fields="nickname,photo_50")
+    return friends
 
 
 def find_music_in_post(list_for_music, post):
