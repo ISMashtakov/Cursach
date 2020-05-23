@@ -120,7 +120,7 @@ class MyWindow:
         all_objects.append(text)
         self.friends = self.vk.get_all_friends()
         self.friends["count"] += 1
-        self.friends["items"].append(self.vk.get_info("photo_50"))
+        self.friends["items"].append(self.vk.get_info(0, "photo_50"))
         bar = Progressbar(self.window, length=200)
         all_objects.append(bar)
         bar['value'] = 0

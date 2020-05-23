@@ -56,19 +56,8 @@ class VK:
         friends = self._api.friends.get(fields="nickname,photo_50")
         return friends
 
-    def get_info(self, field, user=None):
-        if not user:
-            return self._api.users.get(fields=field)[0]
-
-    def find_music_in_post(self, list_for_music, post):
-        if "copy_history" in post:
-            for i in post["copy_history"]:
-                self.find_music_in_post(list_for_music, i)
-        if "attachments" in post:
-            for i in post["attachments"]:
-                if "type" in i and i["type"] == "audio":
-                    # Нашёл аудиозапись на стене
-                    list_for_music.append([i["audio"]["artist"], i["audio"]["title"]])
+    def get_info(self, user, field):
+        return self._api.users.get(user_ids=user, fields=field)[0]
 
     def get_list_of_music_from_walls_in_page(self, to_id):
         all_music = []
@@ -76,44 +65,49 @@ class VK:
         while True:
             posts = self._api.wall.get(owner_id=to_id, count=100, offset=ofs)
             for i in posts["items"]:
-                self.find_music_in_post(all_music, i)
+                all_music.extend(self._find_music_in_post(i))
             ofs += 100
             if ofs >= posts["count"]:
                 break
-        print(all_music)
+        return all_music
+
+    def get_user_groups(self, user):
+        vk_groups = self._api.groups.get(user_id=user)
+        return self._get_groups_from_groups_ids(vk_groups["items"])
 
     def get_general_groups(self, to_id1, to_id2):
         groups1 = set(self._api.groups.get(user_id=to_id1)['items'])
         groups2 = set(self._api.groups.get(user_id=to_id2)['items'])
         general = groups1.intersection(groups2)
-        return general
+        return self._get_groups_from_groups_ids(list(general))
 
-    def get_post_with_like(self, to_id):
-        all_likes = []
-        public = self._api.groups.get(user_id=to_id)
-        print(public['count'])
-        for Id in public['items']:
-            print(Id)
+    def get_post_with_like(self, user):
+        likes = []
+        groups = self.get_user_groups(user)
+        groups = groups[:5 if len(groups) >= 5 else len(groups)]
+        for group in groups:
             ofs = 0
+            print(group["name"])
             while True:
-                posts = self._api.wall.get(owner_id=-Id, count=10, offset=ofs)
+                posts = self._api.wall.get(owner_id=-group["id"], count=10, offset=ofs)
                 for i in posts["items"]:
-                    if self._api.likes.isLiked(user_id=to_id, type='post', item_id=i['id'])['liked'] == 1:
+                    if self._api.likes.isLiked(user_id=user, type='post', item_id=i['id'])['liked'] == 1:
+                        likes.append(i)
                         print(i)
-                        all_likes.append(i)
-                ofs += 100
-                if ofs >= posts["count"] or ofs > 0:
+                ofs += 10
+                print(ofs)
+                if ofs >= posts["count"] or ofs >= 100:
                     break
-        print(all_likes)
+        return likes
 
-    def get_all_music(self, to_id):
-        url = "https://vk.com/audios" + str(to_id)
+    def get_all_music(self, user):
+        url = "https://vk.com/audios" + str(user)
         self.driver.get(url)
 
         WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.CLASS_NAME, "ui_tab_sel"))
         )
-        if not str(self.driver.current_url).endswith(str(to_id)):
+        if not str(self.driver.current_url).endswith(str(user)):
             raise VKAccessMusicError('you do not have access to music')
 
         text = self.driver.page_source
@@ -141,14 +135,33 @@ class VK:
         chrome_options.add_argument("--headless")
         return webdriver.Chrome(options=chrome_options)
 
+    def _find_music_in_post(self, post):
+        list_for_music = []
+        if "copy_history" in post:
+            for i in post["copy_history"]:
+                list_for_music.extend(self._find_music_in_post(i))
+        if "attachments" in post:
+            for i in post["attachments"]:
+                if "type" in i and i["type"] == "audio":
+                    # Нашёл аудиозапись на стене
+                    list_for_music.append({"author": i["audio"]["artist"], "name": i["audio"]["title"]})
+        return list_for_music
 
+    def _get_groups_from_groups_ids(self, groups_ids):
+        if not groups_ids:
+            return []
+        vk_groups_info = self._api.groups.getById(group_ids=groups_ids)
+        groups = []
+        for i in vk_groups_info:
+            groups.append({"id": i["id"], "name": i["name"]})
+        return groups
+
+me = None
+milena = 191776959
+udin = 420205723
 vk = VK()
 vk.login = "89063577290"
 vk.password = "Gariktron1"
 vk.create_api()
-vk.auth_selenium()
-#a = vk.get_all_music(191776959)
-a = vk.get_all_music(420205723)
-print(a)
-print(len(a))
+print(vk.getLikes(me))
 pass
