@@ -45,13 +45,11 @@ class MyWindow:
         all_objects.append(password_input)
 
         def click_enter():
-            # self.vk.create_session(mail_input.get(), password_input.get())
-            self.vk.login = "89063577290"
-            self.vk.password = "Gariktron1"
+            self.vk.login = "89063577290" # mail_input.get(),
+            self.vk.password = "Gariktron1" # password_input.get()
             if not self.vk.create_api():
                 messagebox.showwarning('Ошибка', 'Логин или пароль введены неверно!')
             else:
-                # self.vk.create_api(mail_input.get(), password_input.get())
                 self.vk.create_api()
                 destroy_all_objects(all_objects)
                 threading.Thread(target=self.first_download_page, args=[font]).start()
@@ -70,7 +68,6 @@ class MyWindow:
         img2 = Label(self.window, image=render)
         img2.image = render
         img2.place(x=250, y=10)
-        general_result = []
 
         def update_image(arg):
             ind = names.index(combobox1.get())
@@ -133,3 +130,5 @@ class MyWindow:
         self.draw_second_page(font)
 
 
+if __name__ == '__main__':
+    MyWindow()

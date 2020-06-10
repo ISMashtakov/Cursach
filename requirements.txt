@@ -1,0 +1,6 @@
+selenium==3.141.0
+vk_api==11.8.0
+pillow==7.1.2
+bs4==0.0.1
+yandex_music==0.1.2
+pymorphy2==0.8

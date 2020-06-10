@@ -1,16 +1,29 @@
-#from myGUI import MyWindow
+from user import User
+from VK import VK
+from users_comparator import UsersComparator
+from YaMusic import YaMusic
 
+from pymorphy2 import MorphAnalyzer
 
-#window = MyWindow()
+vk = VK()
+vk.login = "89063577290"
+vk.password = "Gariktron1"
+vk.create_api()
 
-from selenium import webdriver
+u = User(420205723)
+milena = User(191776959)
+ta = User(112349156)
+to = User(151384038)
+m = User(235832830)
+v = User(228354023)
+me = User(220697751)
+i = User(116598269)
 
-chrome_options = webdriver.ChromeOptions()
-chrome_options.add_argument("--headless")
+#com = UsersComparator(to, milena).compare_music()
+#com = UsersComparator(me, v).compare_music()
+#com = UsersComparator(me, milena).compare_music()
+#print(UsersComparator(i, to).compare_user_information())
+#print(UsersComparator(me, to).compare_user_information())
 
-driver = webdriver.Chrome(options=chrome_options)
-
-driver.get("https://yandex.ru/")
-driver.execute_script("window.scrollBy(" + str(0) + "," + str(500) + ");")
-
+com = UsersComparator(me, milena).compare_groups()
 pass
