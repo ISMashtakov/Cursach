@@ -118,7 +118,6 @@ class VK(object):
             raise VKAccessException('you do not have access to music')
 
         text = self.__driver.page_source
-        print(12)
         while True:
             for _ in range(20):
                 self.__driver.execute_script("window.scrollBy(0,50000);")

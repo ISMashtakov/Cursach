@@ -43,13 +43,13 @@ class MyWindow:
         text_password = Label(self.window, text="Пароль", font=(font, 15))
         text_password.place(x=250, y=160)
         all_objects.append(text_password)
-        password_input = Entry(self.window, font=(font, 15), width=16)
+        password_input = Entry(self.window, font=(font, 15), show='*', width=16)
         password_input.place(x=250, y=190)
         all_objects.append(password_input)
 
         def click_enter():
-            self.vk.login = "89063577290" # mail_input.get(),
-            self.vk.password = "Gariktron1" # password_input.get()
+            self.vk.login = mail_input.get()
+            self.vk.password = password_input.get()
             if not self.vk.create_api():
                 messagebox.showwarning('Ошибка', 'Логин или пароль введены неверно!')
             else:
@@ -105,6 +105,7 @@ class MyWindow:
             bar.place(x=200, y=200)
             score, description = UsersComparator(user1, user2, bar).compare()
             description += "\n\n Итоговый счёт: " + str(int(score))
+            print(int(score))
             text = Label(self.window, text="Результаты сравнения", font=(font, 18))
             text.place(x=200, y=150)
             for_destroy.append(text)

@@ -34,7 +34,7 @@ class Description:
         "{FNI1} и {FNI2} не смогут обсудить какие-то песни, так как слушают разные."
     ]
     description_close_inf = [
-        "{FNI} жалко личной информации для вас."
+        "{FND} жалко личной информации для вас."
     ]
     description_close_inf_both = [
         "Им жалко личной информации для вас."
@@ -52,7 +52,7 @@ class Description:
         "{h} - лучший город на земле по мнению {FNR1} и {FNR2}, так как это их родина."
     ]
     description_general_university = [
-        "{u} всё же смогу заманить {FNR1} и {FNR2} к себе."
+        "{u} всё же смог заманить {FNR1} и {FNR2} к себе."
     ]
     description_general_words = [
         "{FND1} и {FND2} нравится слово '{w}'. Иначе как объяснить: почему оно так часто встречаеться в их постах."
@@ -165,7 +165,6 @@ class UsersComparator:
     def _update_bar(self):
         while self.need_update:
             time.sleep(0.1)
-            print(self.progress, self.vk.progress)
             self.bar["value"] = self.progress + self.vk.progress*35
 
     def compare_music(self):
@@ -176,7 +175,7 @@ class UsersComparator:
         self.progress = 70
         self.vk.progress = 0
         if self.user1_all_music == self.user2_all_music:
-            return 10, ''
+            return 50, ''
         if not self.user1_all_music or not self.user2_all_music:
             return 0, ''
         general_title = set()
@@ -193,13 +192,14 @@ class UsersComparator:
         com_gen = self.compare_genres()
         score = com_gen[0]
         description = com_gen[1] + "\n"
-        print(2)
-        score += 10 * len(general_author) / (min(len(self.user1_all_music), len(self.user2_all_music)) // 100 + 1)
+        score += 10 * len(general_author) / (max(len(self.user1_all_music), len(self.user2_all_music)) // 100 + 1)
         description += self.descriptions.get_general_authors(general_author) + "\n"
 
-        score += 20 * len(general_title) / (min(len(self.user1_all_music), len(self.user2_all_music)) // 100 + 1)
+        score += 20 * len(general_title) / (max(len(self.user1_all_music), len(self.user2_all_music)) // 100 + 1)
         description += self.descriptions.get_general_titles(general_title) + "\n"
 
+        if score >200:
+            score = 200
         return score, description
 
     def compare_genres(self):
@@ -241,7 +241,7 @@ class UsersComparator:
 
     def compare_user_information(self):
         if not self.__have_inf(self.user1) and not self.__have_inf(self.user2):
-            return 5, self.descriptions.get_without_inf()
+            return 50, self.descriptions.get_without_inf()
         elif not self.__have_inf(self.user1):
             return 0, self.descriptions.get_without_inf(self.user1)
         elif not self.__have_inf(self.user2):
@@ -256,25 +256,25 @@ class UsersComparator:
 
             if len(bd1s) == len(bd2s) == 3:
                 if bd1s[2] == bd2s[2]:
-                    score += 3
-                    description += self.descriptions.get_general_year(bd1s[2])
+                    score += 8
+                    description += self.descriptions.get_general_year(bd1s[2]) + "\n"
             if bd1s[1] == bd2s[1]:
-                score += 3
-                description += self.descriptions.get_general_month(bd1s[1])
+                score += 8
+                description += self.descriptions.get_general_month(bd1s[1]) + "\n"
             if bd1s[0] == bd2s[0]:
-                score += 3
-                description += self.descriptions.get_general_day(bd1s[0])
+                score += 8
+                description += self.descriptions.get_general_day(bd1s[0]) + "\n"
         ht1 = self.user1.inf["home_town"]
         ht2 = self.user2.inf["home_town"]
         if ht1 and ht2 and ht1 == ht2:
-            score += 3
-            description += self.descriptions.get_general_home_town(ht1)
+            score += 11
+            description += self.descriptions.get_general_home_town(ht1) + "\n"
 
         u1 = self.user1.inf["education"]
         u2 = self.user2.inf["education"]
         if u1 and u2 and u1 == u2:
-            score += 3
-            description += self.descriptions.get_general_university(u1)
+            score += 11
+            description += self.descriptions.get_general_university(u1) + "\n"
 
         return score, description
 
@@ -310,23 +310,26 @@ class UsersComparator:
     def compare(self):
         if self.bar:
             threading.Thread(target=self._update_bar, args=[]).start()
-        print(1)
         score = 0
         description = ""
         res = self.compare_music()
         score += res[0]
         description += res[1] + '\n'
+        print("music", res[0])
         res = self.compare_posts()
         score += res[0]
         description += res[1] + '\n'
         self.progress = 80
+        print("posts", res[0])
         res = self.compare_groups()
         score += res[0]
         description += res[1] + '\n'
         self.progress = 90
+        print("groups", res[0])
         res = self.compare_user_information()
         score += res[0]
         description += res[1]
+        print("inf", res[0])
         self.progress = 100
         self.need_update = False
         return score, description
