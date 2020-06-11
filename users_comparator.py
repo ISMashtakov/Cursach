@@ -1,6 +1,8 @@
 import random
 import string
+import time
 from collections import Counter
+import threading
 
 from pymorphy2 import MorphAnalyzer
 
@@ -19,7 +21,7 @@ class Description:
         "Из всего множества жанров {FNI1} выбрал {V1}, а {FNI2} - {V2}."
     ]
     description_general_authors = [
-        "{FNI1} и {FNI2} оба слушают например {au}.",
+        "{FNI1} и {FNI2} оба слушают {au}.",
         "наверно только {FNI1} и {FNI2} слушают {au}."
     ]
     description_general_titles = [
@@ -53,13 +55,13 @@ class Description:
         "{u} всё же смогу заманить {FNR1} и {FNR2} к себе."
     ]
     description_general_words = [
-        "{FNR1} и {FNR2} нравиться слово '{w}'. Иначе как объяснить: почему оно так часто встречаеться в их постах."
+        "{FND1} и {FND2} нравится слово '{w}'. Иначе как объяснить: почему оно так часто встречаеться в их постах."
     ]
     description_not_general_words = [
         "посты {FNR1} и {FNR2} сложно перепутать, так как они совершенно разные."
     ]
     description_general_groups = [
-        "посты в {g}, видать, очень нравятся {FND1} и {FND2} ."
+        "посты в '{g}', видать, очень нравятся {FND1} и {FND2} ."
     ]
     description_not_general_groups = [
         "глядя на паблики {FNR1} и {FNR2}, увлечения у них сильно отличаются."
@@ -70,26 +72,23 @@ class Description:
         self.user2 = user2
         self.kwargs = {"FNI1": user1.first_name["I"], "FNI2": user2.first_name["I"], "LNI1": user1.last_name["I"], "LNI2": user2.last_name["I"],
                        "FNR1": user1.first_name["R"], "FNR2": user2.first_name["R"], "LNR1": user1.last_name["R"], "LNR2": user2.last_name["R"],
-                       "FND1": user1.first_name["D"], "FND2": user2.first_name["D"], "LND1": user1.last_name["D"], "LND2": user2.last_name["D"],
-                       "FNV1": user1.first_name["V"], "FNV2": user2.first_name["V"], "LNV1": user1.last_name["V"], "LNV2": user2.last_name["V"],
-                       "FNT1": user1.first_name["T"], "FNT2": user2.first_name["T"], "LNT1": user1.last_name["T"], "LNT2": user2.last_name["T"],
-                       "FNP1": user1.first_name["P"], "FNP2": user2.first_name["P"], "LNP1": user1.last_name["P"], "LNP2": user2.last_name["P"]}
+                       "FND1": user1.first_name["D"], "FND2": user2.first_name["D"], "LND1": user1.last_name["D"], "LND2": user2.last_name["D"],}
+                       # "FNV1": user1.first_name["V"], "FNV2": user2.first_name["V"], "LNV1": user1.last_name["V"], "LNV2": user2.last_name["V"],
+                       # "FNT1": user1.first_name["T"], "FNT2": user2.first_name["T"], "LNT1": user1.last_name["T"], "LNT2": user2.last_name["T"],
+                       # "FNP1": user1.first_name["P"], "FNP2": user2.first_name["P"], "LNP1": user1.last_name["P"], "LNP2": user2.last_name["P"]}
         self.kwargs1 = {"FNI": user1.first_name["I"], "LNI": user1.last_name["I"],
                         "FNR": user1.first_name["R"], "LNR": user1.last_name["R"],
-                        "FND": user1.first_name["D"], "LND": user1.last_name["D"],
-                        "FNV": user1.first_name["V"], "LNV": user1.last_name["V"],
-                        "FNT": user1.first_name["T"], "LNT": user1.last_name["T"],
-                        "FNP": user1.first_name["P"], "LNP": user1.last_name["P"],
+                        "FND": user1.first_name["D"], "LND": user1.last_name["D"],}
+                        # "FNV": user1.first_name["V"], "LNV": user1.last_name["V"],
+                        # "FNT": user1.first_name["T"], "LNT": user1.last_name["T"],
+                        # "FNP": user1.first_name["P"], "LNP": user1.last_name["P"],}
 
-        }
         self.kwargs2 = {"FNI": user2.first_name["I"], "LNI": user2.last_name["I"],
                         "FNR": user2.first_name["R"], "LNR": user2.last_name["R"],
-                        "FND": user2.first_name["D"], "LND": user2.last_name["D"],
-                        "FNV": user2.first_name["V"], "LNV": user2.last_name["V"],
-                        "FNT": user2.first_name["T"], "LNT": user2.last_name["T"],
-                        "FNP": user2.first_name["P"], "LNP": user2.last_name["P"],
-
-                        }
+                        "FND": user2.first_name["D"], "LND": user2.last_name["D"],}
+                        # "FNV": user2.first_name["V"], "LNV": user2.last_name["V"],
+                        # "FNT": user2.first_name["T"], "LNT": user2.last_name["T"],
+                        # "FNP": user2.first_name["P"], "LNP": user2.last_name["P"],}
 
     def get_good_genres(self, genre):
         return random.choice(self.description_good_genres).format(I=all_genres[genre]["I"],
@@ -139,7 +138,7 @@ class Description:
         return random.choice(self.description_general_university).format(u=uni, **self.kwargs)
 
     def get_general_word(self, words):
-        return random.choice(self.description_general_words).format(u=random.choice(list(words)), **self.kwargs)
+        return random.choice(self.description_general_words).format(w=random.choice(list(words)), **self.kwargs)
 
     def get_not_general_word(self):
         return random.choice(self.description_not_general_words).format(**self.kwargs)
@@ -152,19 +151,34 @@ class Description:
 
 
 class UsersComparator:
-    def __init__(self, user1: User, user2: User):
+    def __init__(self, user1: User, user2: User, bar=None):
         self.user1 = user1
         self.user2 = user2
         self.vk = VK.get_instance()
         self.descriptions = Description(user1, user2)
         self.user1_all_music = None
         self.user2_all_music = None
+        self.bar = bar
+        self.progress = 0
+        self.need_update = True
+
+    def _update_bar(self):
+        while self.need_update:
+            time.sleep(0.1)
+            print(self.progress, self.vk.progress)
+            self.bar["value"] = self.progress + self.vk.progress*35
 
     def compare_music(self):
         self.user1_all_music = self.user1.music_from_audios
+        self.progress = 35
+        self.vk.progress = 0
         self.user2_all_music = self.user2.music_from_audios
-        score = 0
-        description = ""
+        self.progress = 70
+        self.vk.progress = 0
+        if self.user1_all_music == self.user2_all_music:
+            return 10, ''
+        if not self.user1_all_music or not self.user2_all_music:
+            return 0, ''
         general_title = set()
         general_author = set()
         for mus1 in self.user1_all_music:
@@ -177,9 +191,9 @@ class UsersComparator:
                 if a:
                     general_author = general_author.union(a)
         com_gen = self.compare_genres()
-        score += com_gen[0]
+        score = com_gen[0]
         description = com_gen[1] + "\n"
-
+        print(2)
         score += 10 * len(general_author) / (min(len(self.user1_all_music), len(self.user2_all_music)) // 100 + 1)
         description += self.descriptions.get_general_authors(general_author) + "\n"
 
@@ -290,4 +304,29 @@ class UsersComparator:
         score = len(general) / (min(len(groups2), len(groups1))//10+1)
         description = self.descriptions.get_general_groups(general) if general \
             else self.descriptions.get_not_general_groups()
+        description += "\n"
+        return score, description
+
+    def compare(self):
+        if self.bar:
+            threading.Thread(target=self._update_bar, args=[]).start()
+        print(1)
+        score = 0
+        description = ""
+        res = self.compare_music()
+        score += res[0]
+        description += res[1] + '\n'
+        res = self.compare_posts()
+        score += res[0]
+        description += res[1] + '\n'
+        self.progress = 80
+        res = self.compare_groups()
+        score += res[0]
+        description += res[1] + '\n'
+        self.progress = 90
+        res = self.compare_user_information()
+        score += res[0]
+        description += res[1]
+        self.progress = 100
+        self.need_update = False
         return score, description

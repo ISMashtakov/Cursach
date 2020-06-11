@@ -25,5 +25,5 @@ i = User(116598269)
 #print(UsersComparator(i, to).compare_user_information())
 #print(UsersComparator(me, to).compare_user_information())
 
-com = UsersComparator(me, milena).compare_groups()
+print(UsersComparator(me, milena).compare())
 pass

@@ -20,6 +20,9 @@ class VKAccessException(Exception):
 class VK(object):
     __instance = None
     music_cache_path = "vk_music_from_audio_cache.json"
+    image_cache_path = "image_cache.json"
+    name_cache_path = "name_cache.json"
+
 
     def __init__(self):
         self.api = None
@@ -29,6 +32,9 @@ class VK(object):
         self.__ya_music = YaMusic()
         self.__music_from_audios_cache = {}
         self.__load_cache()
+        self.images_cache = {}
+        self.name_cache = {}
+        self.progress = 0
         VK.__instance = self
 
     def __del__(self):
@@ -39,10 +45,20 @@ class VK(object):
         if os.path.exists(self.music_cache_path):
             with open(self.music_cache_path, "r") as file:
                 self.__music_from_audios_cache = json.load(file)
+        if os.path.exists(self.image_cache_path):
+            with open(self.image_cache_path, "r") as file:
+                self.images_cache = json.load(file)
+        if os.path.exists(self.name_cache_path):
+            with open(self.name_cache_path, "r") as file:
+                self.images_cache = json.load(file)
 
-    def __save_cache(self):
+    def save_cache(self):
         with open(self.music_cache_path, "w") as file:
             json.dump(self.__music_from_audios_cache, file)
+        with open(self.image_cache_path, "w") as file:
+            json.dump(self.images_cache, file)
+        with open(self.name_cache_path, "w") as file:
+            json.dump(self.name_cache, file)
 
     @staticmethod
     def get_instance():
@@ -102,6 +118,7 @@ class VK(object):
             raise VKAccessException('you do not have access to music')
 
         text = self.__driver.page_source
+        print(12)
         while True:
             for _ in range(20):
                 self.__driver.execute_script("window.scrollBy(0,50000);")
@@ -110,7 +127,8 @@ class VK(object):
             text = self.__driver.page_source
 
         self.__music_from_audios_cache[str(id)] = text
-        self.__save_cache()
+        self.save_cache()
+        self.progress = 0.1
         return self._get_music_from_html(text)
 
     def _auth_selenium(self):
@@ -130,7 +148,8 @@ class VK(object):
         html_music = soup.findAll('div', class_='audio_row__performer_title')
         music = []
 
-        for html in html_music:
+        for i, html in enumerate(html_music):
+            self.progress = 0.1 + (i/len(html_music)*0.9)
             author = html.find("a").text
             name = html.find("span", class_="audio_row__title_inner _audio_row__title_inner").text
             music.append(self.__ya_music.get_song(name, author))

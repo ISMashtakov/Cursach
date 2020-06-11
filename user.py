@@ -1,3 +1,5 @@
+import requests
+
 from VK import VK
 from VK import VKAccessException
 
@@ -5,12 +7,11 @@ from VK import VKAccessException
 class User:
     __all_user = {}
 
-    def __init__(self, id, first_name=None, last_name=None, image=None, music_from_page=None, music_from_audios=None, friends=None, groups=None, inf=None):
+    def __init__(self, id, first_name=None, last_name=None, image=None, music_from_audios=None, friends=None, groups=None, inf=None):
         self.id = id
         self.__first_name = first_name
         self.__last_name = last_name
         self.__image = image
-        self.__music_from_page = music_from_page
         self.__music_from_audios = music_from_audios
         self.__friends = friends
         self.__groups = groups
@@ -33,14 +34,18 @@ class User:
                 if friend['id'] in User.__all_user:
                     self.__friends.append(User.__all_user[friend['id']])
                 else:
-                    self.__friends.append(User(id=friend['id'],
-                                               first_name=friend["first_name"], last_name=friend["last_name"]))
+                    self.__friends.append(User(id=friend['id']))
         return self.__friends
 
     @property
     def image(self):
         if self.__image is None:
-            self.__image = self.__vk.api.users.get(user_id=self.id, fields="photo_50")
+            if self.id in self.__vk.images_cache:
+                url = self.__vk.images_cache[self.id]
+            else:
+                url = self.__vk.api.users.get(user_id=self.id, fields="photo_50")[0]["photo_50"]
+            self.__image = requests.get(url).content
+            self.__vk.images_cache[self.id] = url
         return self.__image
 
     @property
@@ -51,15 +56,6 @@ class User:
             except VKAccessException:
                 self.__music_from_audios = []
         return self.__music_from_audios
-
-    @property
-    def music_from_page(self):
-        if self.__music_from_page is None:
-            try:
-                self.__music_from_page = self.__vk.get_music_from_page(self.id)
-            except VKAccessException:
-                self.__music_from_page = []
-        return self.__music_from_page
 
     @property
     def first_name(self):
@@ -74,6 +70,10 @@ class User:
         return self.__last_name
 
     def __updates_names(self):
+        if self.id in self.__vk.name_cache:
+            self.__first_name = self.__vk.name_cache[self.id][0]
+            self.__last_name = self.__vk.name_cache[self.id][1]
+            return
         self.__first_name = {}
         self.__last_name = {}
         res = self.__vk.api.users.get(user_id=self.id, fields="first_name", name_case='nom')
@@ -85,15 +85,16 @@ class User:
         res = self.__vk.api.users.get(user_id=self.id, fields="first_name", name_case='dat')
         self.__first_name["D"] = res[0]["first_name"]
         self.__last_name["D"] = res[0]["last_name"]
-        res = self.__vk.api.users.get(user_id=self.id, fields="first_name", name_case='acc')
-        self.__first_name["V"] = res[0]["first_name"]
-        self.__last_name["V"] = res[0]["last_name"]
-        res = self.__vk.api.users.get(user_id=self.id, fields="first_name", name_case='ins')
-        self.__first_name["T"] = res[0]["first_name"]
-        self.__last_name["T"] = res[0]["last_name"]
-        res = self.__vk.api.users.get(user_id=self.id, fields="first_name", name_case='abl')
-        self.__first_name["P"] = res[0]["first_name"]
-        self.__last_name["P"] = res[0]["last_name"]
+        # res = self.__vk.api.users.get(user_id=self.id, fields="first_name", name_case='acc')
+        # self.__first_name["V"] = res[0]["first_name"]
+        # self.__last_name["V"] = res[0]["last_name"]
+        # res = self.__vk.api.users.get(user_id=self.id, fields="first_name", name_case='ins')
+        # self.__first_name["T"] = res[0]["first_name"]
+        # self.__last_name["T"] = res[0]["last_name"]
+        # res = self.__vk.api.users.get(user_id=self.id, fields="first_name", name_case='abl')
+        # self.__first_name["P"] = res[0]["first_name"]
+        # self.__last_name["P"] = res[0]["last_name"]
+        self.__vk.name_cache[self.id] = (self.__first_name, self.__last_name)
 
     @property
     def inf(self):
